@@ -2,16 +2,16 @@ module Deliver
   class Setup
     def run(options)
       containing = (File.directory?("fastlane") ? 'fastlane' : '.')
-      create_based_on_identifier(containing, options)
+      default_create_based_on_identifier(containing, options)
     end
 
-    # This will download all the app metadata and store its data into JSON files
-    # @param deliver_path (String) The directory in which the Deliverfile should be created
-    # @param identifier (String) The app identifier we want to create Deliverfile based on
-    # @param project_name (String) The default name of the project, which is used in the generated Deliverfile
-    def create_based_on_identifier(deliver_path, options)
+    def default_create_based_on_identifier(deliver_path, options)
       file_path = File.join(deliver_path, 'Deliverfile')
-      data = generate_deliver_file(deliver_path, options)
+      data = default_generate_deliver_file(deliver_path, options)
+      setup_deliver(file_path, data, deliver_path, options)
+    end
+
+    def setup_deliver(file_path, data, deliver_path, options)
       File.write(file_path, data)
 
       download_screenshots(deliver_path, options)
@@ -21,6 +21,22 @@ module Deliver
       File.write(File.join(deliver_path, 'screenshots', 'README.txt'), File.read("#{Helper.gem_path('deliver')}/lib/assets/ScreenshotsHelp"))
 
       Helper.log.info "Successfully created new Deliverfile at path '#{file_path}'".green
+    end
+
+    # This will download all the app metadata and store its data into JSON files
+    # @param deliver_path (String) The directory in which the Deliverfile should be created
+    # @param identifier (String) The app identifier we want to create Deliverfile based on
+    # @param project_name (String) The default name of the project, which is used in the generated Deliverfile
+    def create_based_on_identifier(deliver_path, options)
+      file_path = File.join(deliver_path, 'Deliverfile')
+      data = generate_deliver_file(deliver_path, options)
+      setup_deliver(file_path, data, deliver_path, options)
+    end
+
+    def default_generate_deliver_file(deliver_path, options)
+      deliver = generate_deliver_file(deliver_path, options)
+      deliver += "\napple_id ENV['PRODUCE_APPLE_ID']" if ENV['PRODUCE_APPLE_ID']
+      deliver
     end
 
     # This method takes care of creating a new 'deliver' folder, containg the app metadata
