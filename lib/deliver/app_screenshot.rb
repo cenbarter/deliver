@@ -21,6 +21,8 @@ module Deliver
       IOS_APPLE_WATCH = "iOS-Apple-Watch"
       # Mac
       MAC = "Mac"
+      # Apple TV
+      APPLE_TV = "Apple-TV"
     end
 
     # @return [Deliver::ScreenSize] the screen size (device type)
@@ -55,7 +57,8 @@ module Deliver
         ScreenSize::IOS_IPAD => "ipad",
         ScreenSize::IOS_IPAD_PRO => "ipadPro",
         ScreenSize::MAC => "mac",
-        ScreenSize::IOS_APPLE_WATCH => "watch"
+        ScreenSize::IOS_APPLE_WATCH => "watch",
+        ScreenSize::APPLE_TV => "appleTV"
       }
       return matching[self.screen_size]
     end
@@ -70,7 +73,8 @@ module Deliver
         ScreenSize::IOS_IPAD => "iPad",
         ScreenSize::IOS_IPAD_PRO => "iPad Pro",
         ScreenSize::MAC => "Mac",
-        ScreenSize::IOS_APPLE_WATCH => "Watch"
+        ScreenSize::IOS_APPLE_WATCH => "Watch",
+        ScreenSize::APPLE_TV => "Apple TV"
       }
       return matching[self.screen_size]
     end
@@ -129,14 +133,29 @@ module Deliver
         ],
         ScreenSize::IOS_APPLE_WATCH => [
           [312, 390]
+        ],
+        ScreenSize::APPLE_TV => [
+          [1920, 1080]
         ]
       }
 
+      # Walk up two directories and test if we need to handle a platform that doesn't support landscape
+      path_component = Pathname.new(path).each_filename.to_a[-3]
+      if path_component.eql? "appleTV"
+        skip_landscape = true
+      end
+
       devices.each do |device_type, array|
         array.each do |resolution|
-          if (size[0] == resolution[0] and size[1] == resolution[1]) or # portrait
-             (size[1] == resolution[0] and size[0] == resolution[1]) # landscape
-            return device_type
+          if skip_landscape
+            if size[0] == resolution[0] and size[1] == resolution[1] # portrait
+              return device_type
+            end
+          else
+            if (size[0] == resolution[0] and size[1] == resolution[1]) or # portrait
+               (size[1] == resolution[0] and size[0] == resolution[1]) # landscape
+              return device_type
+            end
           end
         end
       end
