@@ -189,6 +189,11 @@
 
               <% last_size = screenshot.screen_size %>
             <% end %>
+            
+            <% if last_size != nil %>
+              </div>
+            <% end %>
+            
           <% else %>
             <!-- no screenshots -->
             <div style="border: 3px solid red; padding: 0px 20px">
